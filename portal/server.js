@@ -488,7 +488,8 @@ jobs:
             --quiet
           
           # Add to load balancer
-          bash <(curl -s https://raw.githubusercontent.com/nelc/appfactory-v2/main/scripts/add-to-lb.sh) \$APP_NAME
+          chmod +x add-to-lb.sh
+          ./add-to-lb.sh \$APP_NAME
           
           echo ""
           echo "✅ Deployment complete!"
@@ -503,6 +504,13 @@ jobs:
           echo ""
           echo "Once DNS propagates (1-5 minutes):"
           echo "https://\${APP_NAME}.futurex.sa"
+\`\`\`
+
+──────────────────────────────────────────────────────────
+FILE: add-to-lb.sh
+──────────────────────────────────────────────────────────
+\`\`\`bash
+${fs.readFileSync(path.join(__dirname, '../scripts/add-to-lb.sh'), 'utf8')}
 \`\`\`
 
 ──────────────────────────────────────────────────────────
