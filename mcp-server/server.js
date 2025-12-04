@@ -9,7 +9,7 @@ const http = require('http');
 const https = require('https');
 
 // Configuration
-const PORTAL_API_URL = process.env.PORTAL_API_URL || 'https://appfactory-v2-portal-wyn3ql7bvq-wx.a.run.app/api/generate-prompt';
+const PORTAL_API_URL = process.env.PORTAL_API_URL || 'https://appfactory-v2-portal-621571041797.me-central2.run.app/api/generate-prompt';
 
 // Simple HTTP client
 function makeRequest(url, data) {
