@@ -101,21 +101,27 @@ cd ~/${repoName}
 
 STEP 2: Create all files (see templates below)
 
-STEP 3: Show file tree to verify all files exist:
+STEP 3: Make deploy.sh executable:
+\`\`\`bash
+chmod +x ~/${repoName}/deploy.sh
+\`\`\`
+
+STEP 4: Show file tree to verify all files exist:
 \`\`\`bash
 tree ~/${repoName} -L 3
 \`\`\`
 
-STEP 4: Create GitHub repository and push:
+STEP 5: Inform user to run deployment:
 \`\`\`bash
 cd ~/${repoName}
-git init
-git add .
-git commit -m "Initial commit - ${appName}"
-gh repo create nelc/${repoName} --private --source=. --push
+./deploy.sh
 \`\`\`
 
-STEP 5: Inform user about DNS configuration (see end of prompt)
+The deploy.sh script will:
+- Initialize git repository
+- Create GitHub repo in nelc organization
+- Push code and trigger deployment
+- Show DNS configuration at the end
 
 ═══════════════════════════════════════════════════════════
 
@@ -480,6 +486,55 @@ dist/
 \`\`\`
 
 ──────────────────────────────────────────────────────────
+FILE: deploy.sh
+──────────────────────────────────────────────────────────
+\`\`\`bash
+#!/bin/bash
+set -e
+
+APP_NAME=\$(basename \$(pwd))
+
+echo "🚀 Deploying \$APP_NAME to GCP..."
+echo ""
+
+# Check if gh is installed
+if ! command -v gh >/dev/null 2>&1; then
+    echo "❌ GitHub CLI not found. Run setup first:"
+    echo "   curl -fsSL https://raw.githubusercontent.com/nelc/appfactory-v2-mcp/main/setup.sh | bash"
+    exit 1
+fi
+
+# Initialize git if needed
+if [ ! -d .git ]; then
+    echo "📦 Initializing git repository..."
+    git init
+    git add .
+    git commit -m "Initial commit - \$APP_NAME"
+fi
+
+# Create GitHub repo and push
+echo "📤 Creating GitHub repository: nelc/\$APP_NAME..."
+gh repo create nelc/\$APP_NAME --private --source=. --push 2>/dev/null || {
+    echo "   Repository may already exist, pushing to main..."
+    git remote add origin https://github.com/nelc/\$APP_NAME.git 2>/dev/null || true
+    git push -u origin main
+}
+
+echo ""
+echo "✅ Code pushed! Deployment starting..."
+echo ""
+echo "📊 Watch deployment:"
+echo "   gh run watch --repo nelc/\$APP_NAME"
+echo ""
+echo "Or visit:"
+echo "   https://github.com/nelc/\$APP_NAME/actions"
+echo ""
+echo "⏱️  Deployment takes ~5 minutes"
+echo "📋 DNS instructions will be shown at the end"
+echo ""
+\`\`\`
+
+──────────────────────────────────────────────────────────
 FILE: README.md
 ──────────────────────────────────────────────────────────
 \`\`\`markdown
@@ -491,7 +546,16 @@ ${features.map(f => `- ${f}`).join('\n')}
 - Frontend: React + Vite
 - Backend: Node.js + Express
 ${needsDB ? '- Database: PostgreSQL (Cloud SQL)\n' : ''}${needsFiles ? '- Storage: Cloud Storage\n' : ''}
-## Development
+## Quick Start
+
+### Deploy to GCP
+\\\`\\\`\\\`bash
+./deploy.sh
+\\\`\\\`\\\`
+
+After deployment, add the DNS record shown in the output.
+
+### Local Development
 
 \\\`\\\`\\\`bash
 # Backend
@@ -505,11 +569,7 @@ npm install
 npm run dev
 \\\`\\\`\\\`
 
-## Deployment
-
-Push to main branch - GitHub Actions handles the rest.
-
-After deployment, add DNS record in Cloudflare (instructions in workflow output).
+Visit: http://localhost:5173
 \`\`\`
 
 ═══════════════════════════════════════════════════════════
@@ -519,17 +579,30 @@ After deployment, add DNS record in Cloudflare (instructions in workflow output)
 □ All backend files created (package.json, index.js${needsDB ? ', db.js' : ''}${needsFiles ? ', storage.js' : ''})
 □ All frontend files created (package.json, index.html, vite.config.js, src/main.jsx, src/App.jsx)
 □ GitHub workflow file created (.github/workflows/deploy.yml)
+□ deploy.sh script created (executable)
 □ .gitignore and README.md created
 □ File tree shown to user
-□ GitHub repository created and code pushed
 
-🎯 IMPORTANT NOTES:
+🎯 USER INSTRUCTIONS:
 
-1. The workflow will deploy successfully
-2. User must manually add DNS record in Cloudflare (workflow outputs exact instructions)
-3. App will be live at https://${repoName}.futurex.sa after DNS propagates
-${needsDB ? '4. Database is automatically created and connected\n' : ''}${needsFiles ? `${needsDB ? '5' : '4'}. Cloud Storage is automatically available\n` : ''}
-This is a simplified, production-ready setup that eliminates common deployment issues.
+Tell the user to run:
+\`\`\`bash
+cd ~/${repoName}
+./deploy.sh
+\`\`\`
+
+The deploy.sh script will:
+1. Initialize git repository
+2. Create GitHub repo (nelc/${repoName})
+3. Push code and trigger deployment
+4. Output DNS configuration instructions
+
+After deployment completes (~5 minutes):
+- User adds DNS record in Cloudflare
+- App goes live at https://${repoName}.futurex.sa
+${needsDB ? '\nDatabase is automatically created and connected.' : ''}${needsFiles ? '\nCloud Storage is automatically available.' : ''}
+
+This eliminates manual git/GitHub steps - user just runs one script!
 
 ═══════════════════════════════════════════════════════════`;
 }
