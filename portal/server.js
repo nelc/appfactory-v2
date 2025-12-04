@@ -258,17 +258,47 @@ FILE: frontend/package.json
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server.js",
+    "gcp-build": "npm run build"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
     "vite": "^5.0.8"
   }
 }
+\`\`\`
+
+──────────────────────────────────────────────────────────
+FILE: frontend/server.js
+──────────────────────────────────────────────────────────
+\`\`\`javascript
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 8080;
+
+// Serve static files from dist
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// SPA fallback - all routes return index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(\`✅ Frontend server running on port \${PORT}\`);
+});
 \`\`\`
 
 ──────────────────────────────────────────────────────────
