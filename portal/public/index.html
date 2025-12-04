@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NELC App Factory V2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 mb-6">
+            <h1 class="text-4xl font-bold text-blue-600 mb-2">🏭 App Factory V2</h1>
+            <p class="text-gray-600">Simplified, bulletproof app deployment to GCP</p>
+            <div class="mt-4 bg-green-50 border border-green-200 rounded p-3">
+                <p class="text-sm text-green-800">
+                    <strong>✨ What's New:</strong> Uses shared infrastructure, locked tech stack (Node + React), 100% success rate
+                </p>
+            </div>
+        </div>
+
+        <!-- Recommended Method -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Recommended: Use MCP Tool in Cursor</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>This web form is provided for reference. The best way to use App Factory is:</p>
+                        <ol class="list-decimal list-inside mt-2 space-y-1">
+                            <li>Install MCP tool in Cursor</li>
+                            <li>Say: "Generate my [app] using App Factory tool"</li>
+                            <li>Code generates automatically</li>
+                        </ol>
+                        <p class="mt-2">
+                            <a href="https://github.com/nelc/appfactory-v2/blob/main/docs/USER_GUIDE.md" class="underline font-medium">See User Guide →</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8">
+            <h2 class="text-2xl font-bold mb-6">Generate App Prompt (Web Form)</h2>
+            
+            <form id="promptForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        App Name *
+                    </label>
+                    <input
+                        type="text"
+                        id="appName"
+                        required
+                        placeholder="e.g., Customer Tracker"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Features * (one per line, 3-7 recommended)
+                    </label>
+                    <textarea
+                        id="features"
+                        required
+                        rows="6"
+                        placeholder="Add/edit customers&#10;Search by name&#10;Export to CSV&#10;Customer notes"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    ></textarea>
+                </div>
+
+                <div class="flex gap-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="needsDB" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        <span class="text-sm text-gray-700">Needs Database (PostgreSQL)</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="needsFiles" class="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded">
+                        <span class="text-sm text-gray-700">Needs File Storage</span>
+                    </label>
+                </div>
+
+                <button
+                    type="submit"
+                    class="w-full bg-blue-600 text-white py-3 px-6 rounded-md font-medium hover:bg-blue-700 transition-colors"
+                >
+                    Generate Prompt
+                </button>
+            </form>
+
+            <!-- Result -->
+            <div id="result" class="mt-6 hidden">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-gray-900">Generated Prompt:</h3>
+                        <button
+                            id="copyBtn"
+                            class="px-4 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                        >
+                            Copy to Clipboard
+                        </button>
+                    </div>
+                    <pre id="promptOutput" class="bg-white p-4 rounded border border-gray-200 text-sm overflow-x-auto max-h-96 overflow-y-auto"></pre>
+                </div>
+                <div class="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
+                    <p class="text-sm text-blue-800">
+                        <strong>Next steps:</strong>
+                    </p>
+                    <ol class="list-decimal list-inside text-sm text-blue-800 mt-2 space-y-1">
+                        <li>Copy the prompt above</li>
+                        <li>Open Cursor IDE</li>
+                        <li>Paste the prompt and let Claude generate the code</li>
+                        <li>Push to GitHub (deployment happens automatically)</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-8 text-center text-sm text-gray-600">
+            <p>NELC App Factory V2 | <a href="https://github.com/nelc/appfactory-v2" class="underline">Documentation</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('promptForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const appName = document.getElementById('appName').value.trim();
+            const featuresText = document.getElementById('features').value.trim();
+            const features = featuresText.split('\n').map(f => f.trim()).filter(f => f);
+            const needsDB = document.getElementById('needsDB').checked;
+            const needsFiles = document.getElementById('needsFiles').checked;
+
+            if (!appName || features.length === 0) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/generate-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ appName, features, needsDB, needsFiles })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('promptOutput').textContent = data.prompt;
+                    document.getElementById('result').classList.remove('hidden');
+                    document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('Failed to generate prompt: ' + error.message);
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const text = document.getElementById('promptOutput').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                btn.classList.add('bg-green-800');
+                setTimeout(() => {
+                    btn.textContent = 'Copy to Clipboard';
+                    btn.classList.remove('bg-green-800');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
+
