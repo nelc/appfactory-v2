@@ -56,8 +56,10 @@ gcloud run deploy appfactory-v2-portal \
 
 1. **Install MCP tool in Cursor**
    ```bash
-   npm install -g @nelc/app-factory-mcp
+   npm install -g git+https://github.com/nelc/appfactory-v2-mcp.git
    ```
+   
+   **MCP Repository:** https://github.com/nelc/appfactory-v2-mcp
 
 2. **Use in Cursor**
    ```
@@ -87,12 +89,16 @@ gcloud run deploy appfactory-v2-portal \
 ## Repository Structure
 
 ```
-appfactory-v2/
+appfactory-v2/ (PRIVATE)
 ├── portal/          # Self-service portal with fixed prompt
-├── mcp-server/      # MCP tool for Cursor
 ├── setup/           # One-time infrastructure scripts
 ├── scripts/         # Used by app deployments
 └── docs/            # Documentation
+
+appfactory-v2-mcp/ (PUBLIC - separate repo)
+├── server.js        # MCP server
+├── package.json
+└── README.md
 ```
 
 ## Documentation
