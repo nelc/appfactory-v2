@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 
-# Add app to shared Load Balancer
+# Create Load Balancer for single app (with unique IP)
 # Usage: ./add-to-lb.sh <app-name>
 
 APP_NAME="${1:?App name required}"
 PROJECT_ID="app-sandbox-factory"
 REGION="me-central2"
-LB_NAME="appfactory-v2-shared"
+CERT_NAME="futurex-wildcard"
 
-echo "🔗 Adding $APP_NAME to shared Load Balancer..."
+echo "🔗 Creating Load Balancer for $APP_NAME..."
 
 # 1. Create NEGs for backend and frontend
 echo "   Creating NEGs..."
@@ -50,49 +50,86 @@ for SERVICE in "${APP_NAME}-be" "${APP_NAME}-fe"; do
   fi
 done
 
-# 3. Add to URL map
-echo "   Adding to URL map..."
+# 3. Create URL map with path routing
+echo "   Creating URL map..."
+URL_MAP="${APP_NAME}-um"
 
-# Export current URL map
-gcloud compute url-maps export ${LB_NAME}-um \
-  --region=$REGION \
-  --project=$PROJECT_ID \
-  --destination=/tmp/urlmap.yaml
-
-# Add path rules if not exist
-if ! grep -q "$APP_NAME.futurex.sa" /tmp/urlmap.yaml; then
-  cat >> /tmp/urlmap.yaml << EOF
-
+cat > /tmp/${APP_NAME}-urlmap.yaml << EOF
+name: ${URL_MAP}
+defaultService: https://www.googleapis.com/compute/v1/projects/${PROJECT_ID}/regions/${REGION}/backendServices/${APP_NAME}-fe-bs
 hostRules:
 - hosts:
   - ${APP_NAME}.futurex.sa
   pathMatcher: ${APP_NAME}-pm
 pathMatchers:
 - name: ${APP_NAME}-pm
-  defaultService: https://www.googleapis.com/compute/v1/projects/$PROJECT_ID/regions/$REGION/backendServices/${APP_NAME}-fe-bs
+  defaultService: https://www.googleapis.com/compute/v1/projects/${PROJECT_ID}/regions/${REGION}/backendServices/${APP_NAME}-fe-bs
   pathRules:
   - paths:
     - /api
     - /api/*
-    service: https://www.googleapis.com/compute/v1/projects/$PROJECT_ID/regions/$REGION/backendServices/${APP_NAME}-be-bs
+    service: https://www.googleapis.com/compute/v1/projects/${PROJECT_ID}/regions/${REGION}/backendServices/${APP_NAME}-be-bs
 EOF
 
-  # Import updated URL map
-  gcloud compute url-maps import ${LB_NAME}-um \
+gcloud compute url-maps import $URL_MAP \
+  --region=$REGION \
+  --project=$PROJECT_ID \
+  --source=/tmp/${APP_NAME}-urlmap.yaml \
+  --quiet 2>/dev/null || gcloud compute url-maps create $URL_MAP \
+  --default-service=${APP_NAME}-fe-bs \
+  --region=$REGION \
+  --project=$PROJECT_ID
+
+# 4. Create static IP
+echo "   Creating static IP..."
+STATIC_IP_NAME="${APP_NAME}-ip"
+
+if ! gcloud compute addresses describe $STATIC_IP_NAME \
     --region=$REGION \
-    --project=$PROJECT_ID \
-    --source=/tmp/urlmap.yaml \
-    --quiet
+    --project=$PROJECT_ID &>/dev/null; then
+  gcloud compute addresses create $STATIC_IP_NAME \
+    --region=$REGION \
+    --project=$PROJECT_ID
 fi
 
-# 4. Get LB IP
-LB_IP=$(gcloud compute addresses describe ${LB_NAME}-ip \
+LB_IP=$(gcloud compute addresses describe $STATIC_IP_NAME \
   --region=$REGION \
   --project=$PROJECT_ID \
   --format="value(address)")
 
+# 5. Create HTTPS proxy
+echo "   Creating HTTPS proxy..."
+PROXY_NAME="${APP_NAME}-proxy"
+
+if ! gcloud compute target-https-proxies describe $PROXY_NAME \
+    --region=$REGION \
+    --project=$PROJECT_ID &>/dev/null; then
+  gcloud compute target-https-proxies create $PROXY_NAME \
+    --region=$REGION \
+    --url-map=$URL_MAP \
+    --certificate-manager-certificates=$CERT_NAME \
+    --project=$PROJECT_ID
+fi
+
+# 6. Create forwarding rule
+echo "   Creating forwarding rule..."
+FWD_RULE="${APP_NAME}-fwd"
+
+if ! gcloud compute forwarding-rules describe $FWD_RULE \
+    --region=$REGION \
+    --project=$PROJECT_ID &>/dev/null; then
+  gcloud compute forwarding-rules create $FWD_RULE \
+    --region=$REGION \
+    --load-balancing-scheme=EXTERNAL_MANAGED \
+    --address=$STATIC_IP_NAME \
+    --target-https-proxy=$PROXY_NAME \
+    --target-https-proxy-region=$REGION \
+    --ports=443 \
+    --project=$PROJECT_ID
+fi
+
 echo ""
-echo "✅ $APP_NAME added to Load Balancer!"
+echo "✅ Load Balancer created for $APP_NAME!"
 echo ""
 echo "╔════════════════════════════════════════════════════╗"
 echo "║  📋 DNS CONFIGURATION REQUIRED                    ║"
@@ -111,4 +148,3 @@ echo "║  https://${APP_NAME}.futurex.sa"
 echo "║                                                    ║"
 echo "╚════════════════════════════════════════════════════╝"
 echo ""
-
