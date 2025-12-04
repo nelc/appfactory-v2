@@ -18,11 +18,37 @@
 - **Web Form:** https://appfactory-v2-portal-621571041797.me-central2.run.app/
 - **API:** https://appfactory-v2-portal-621571041797.me-central2.run.app/api/generate-prompt
 
-### 3. Repository (✅ Created)
+### 3. Repositories (✅ Created)
 
+**Main Repo (Private):**
 - **GitHub:** https://github.com/nelc/appfactory-v2
-- **Visibility:** Public
-- **MCP Server:** Ready for npm publish
+- **Visibility:** 🔒 Private
+- **Contains:** Portal, infrastructure, deployment scripts
+
+**MCP Repo (Public):**
+- **GitHub:** https://github.com/nelc/appfactory-v2-mcp
+- **Visibility:** 🌐 Public
+- **Contains:** MCP server only (no sensitive data)
+
+---
+
+## 🔐 Security Model
+
+| Component | Visibility | Contains |
+|-----------|------------|----------|
+| `appfactory-v2` | 🔒 Private | Portal, GCP config, infrastructure scripts |
+| `appfactory-v2-mcp` | 🌐 Public | MCP server, portal URL (public endpoint) |
+
+**Why MCP repo is public:**
+- Contains only MCP server code (no secrets)
+- Portal URL is already public (`--allow-unauthenticated`)
+- No GCP project details or credentials
+- Enables easy installation for business users
+
+**What's protected in private repo:**
+- Infrastructure setup scripts
+- GCP project configuration
+- Deployment automation details
 
 ---
 
@@ -69,19 +95,20 @@ Business User (Cursor)
 ### Installation
 
 ```bash
-# Install MCP tool
-npm install -g git+https://github.com/nelc/appfactory-v2.git#mcp-server
+# Install MCP tool (from public repo)
+npm install -g git+https://github.com/nelc/appfactory-v2-mcp.git
 
 # Configure in Cursor MCP settings
 {
   "mcpServers": {
     "app-factory": {
-      "command": "npx",
-      "args": ["@nelc/app-factory-mcp"]
+      "command": "app-factory-mcp"
     }
   }
 }
 ```
+
+**Full documentation:** https://github.com/nelc/appfactory-v2-mcp#readme
 
 ### Usage
 
